@@ -1,0 +1,598 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+Exploration of Prosper Loan Data, by Max Sydow
+========================================================
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk. This
+# prevents the code from displaying in the knitted HTML output. You should set
+# echo=FALSE for all code chunks in your file, unless it makes sense for your
+# report to show the code that generated a particular plot.
+
+# The other parameters for "message" and "warning" should also be set to FALSE
+# for other code chunks once you have verified that each plot comes out as you
+# want it to. This will clean up the flow of your report.
+
+setwd('C:/Users/Maxgs/Udacity/R')
+library(ggplot2)
+
+library(ggthemes)
+
+library(gridExtra)
+library(grid)
+
+theme_set(theme_minimal(24))
+
+#install.packages('tidyverse')
+library(dplyr)
+library(tidyverse)
+
+
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+ProsperLoan <- read.csv('prosperLoanData.csv')
+ProsperLoan$ListingCategory <- ProsperLoan$ListingCategory..numeric.
+
+myvars <- c('Term', 'LoanStatus', 'BorrowerRate','BorrowerAPR', 'ProsperScore', 
+'BorrowerState', 'EmploymentStatus', 'EmploymentStatusDuration', 'IncomeRange',
+'LoanOriginalAmount', 'DebtToIncomeRatio', 'IncomeVerifiable',
+'TotalProsperLoans', 'Investors', 'Occupation',
+'CreditScoreRangeLower', 'CreditScoreRangeUpper', 'ListingCategory')
+
+loan <- ProsperLoan[myvars]
+
+```
+
+> Prosper Loans is a private personal loan issuer.  The overall data set has 82 variables, but here we will look at 18 of them.  They are as follows:
+
+```{r}
+str(loan)
+```
+
+
+>  The data can be found at https://s3.amazonaws.com/udacity-hosted-downloads/ud651/prosperLoanData.csv.  A description of each variable is included in this link: https://docs.google.com/spreadsheets/d/1gDyi_L4UvIrLTEC6Wri5nbaMmkGmLQBk-Yx3z0XDEtI/edit#gid=0.
+
+# Univariate Plots Section
+
+
+###                  Loan Term Lengths
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_Plots}
+ggplot(aes(x = Term), data = loan) +
+  geom_histogram()
+
+summary(loan$Term)
+```
+
+> It looks like there are only 3 lengths of loan terms.  Most are for 36 months, fewer have a duration of 60, and a small number were payed off in 12 months.  
+
+###                 Loan Status
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = LoanStatus), data = loan) +
+  geom_histogram(stat ="count") +
+  theme(axis.text.x = element_text(size = 7, angle = 45))
+```
+
+> The majority of loans are current or completed.  More loans were cancelled than defaulted, and there's a slight decrease in past due loans as time goes on.  
+
+### Listing Category
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+loan$ListingCategory.f <- factor(loan$ListingCategory, labels = c('Not Available', 'Debt Consolidation',                                              'Home Improvement', 'Business', 'Personal Loan', 'Student Use', 'Auto', 
+                                             'Other', 'Baby & Adoption', 'Boat', 'Cosmetic Procedur',
+                                             'Engagement Ring', 'Green Loans', 'Household Expenses',
+                                             'Large Purchases', 'Medical/Dental', 'Motorcycle',
+                                             'RV', 'Taxes', 'Vacation', 'Wedding'))
+
+ggplot(aes(x = ListingCategory.f), data = loan) +
+  geom_histogram(stat = "count") +
+  xlab('ListingCategory') +
+  theme(axis.text.x = element_text(size = 7, angle = 60))
+```
+> By far most of the loans are for debt consolidation.  There's also a large portion with no description.  Home improvement and business loans are relatively prevelant compared to other types.  
+
+### Borrower Rate
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = BorrowerRate), data = loan) +
+  geom_histogram()
+```
+> I chose to look at Borrower Rate instead of APR for simplicity.  This is just the overall total amount of interest on the loan.  The distribution looks fairly normal with some rates more common than others.  For example, 0.325 is far more common than 0.31.  
+
+### Borrower APR
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = BorrowerAPR), data = loan) +
+  geom_histogram()
+```
+> The spikes in the Borrower Rate distribution made me want to look at APR as well, so I went back and added it to my data frame.  Spikes appear here too.  I'm sure there's a reason for this, and maybe accountant for Prosper Loans could give an explanation.  For now, I'll just leave it as an interesting observation.
+
+### Borrower State
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = BorrowerState), data = loan) +
+  geom_histogram(stat = "count") +
+  theme(axis.text.x = element_text(size = 5))
+```
+> California has the most loans.  This makes sense, since it is the most populous state.  It also makes sense that other populous states like New York, Texas, Florida, and Illinois have higher counts.  The unlabled spike might be where state info is not available, or maybe loans from US territories.  No description for that category was given in the variable definitions document.  
+
+### ProsperScore
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = ProsperScore), data = loan) +
+  geom_histogram()
+```
+> Prosper score is a custom risk score based on in house data, 10 being the best.  This distribution is generally normal with some variance in peaks towards center.   I'll leave this as an observation, as I don't think I could guess why those are occurring.
+
+### Employment Status
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = EmploymentStatus), data = loan) +
+  geom_histogram(stat = "count") +
+  theme(axis.text.x = element_text(size = 10, angle = 60))
+```
+> Most loan takers are employed, or employed full-time.  This seems reasonable.  Another significant portion are self-employed.  This seems to fit with the independent nature of Prosper Loans and may be related to the occurance of small business loans observed above.  
+
+### Employment Status Duration
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = EmploymentStatusDuration), data = loan) +
+  geom_histogram(binwidth = 24) +
+  xlab('Employment Duration in Months') 
+
+```
+> With a bin width of 24 months it appears that a large number of loan recipients have been employed between 0 and 2 years, with a peak between 2-4 years, then trailing off for longer durations of employemnt.  People who have been employed longer may have more savings and less need for loans.  Those who are starting their careers may need or want some help with money for some of the categories for loans.  
+
+
+### Income Range
+
+```{r}
+levels(loan$IncomeRange)
+loan$IncomeRange <- ordered(loan$IncomeRange, levels = c('$0', '$1-24,999', '$25,000-49,999',                                                                      '$50,000-74,999', '$75,000-99,999',                                                                        '$100,000+', 'Not employed', 'Not displayed'))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = IncomeRange), data = loan) +
+  geom_histogram(stat = "count") +
+  theme(axis.text.x = element_text(size = 10, angle = 60))
+```
+
+> Most loan takers are in the middle income range from $25k - $74,999k per year.  Slightly more people are in the lower half of this income range.   I should point out that the original array was out of order, with $100,000+ appearing between $1-24,999 and $25,000-49,999.  The array was re-ordered before making the plot seen here.  
+
+### Original Loan Amount
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = LoanOriginalAmount), data = loan) +
+  geom_histogram()
+```
+> Overall the distribution is skewed to the right, but there appears to be more common amounts taken in multiples of $10,000.  
+
+### Debt to Income Ratio
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = DebtToIncomeRatio), data = loan) +
+  geom_histogram(binwidth = 0.1) 
+```
+> Most recipients have lower debt to income ratios (DTI) with a peak at 0.3.  According to credit.org a good DTI is below 36%, or 0.36.  Most Prosper Loan takers have a good DTI, except for the outlier at 10.  
+
+### Verifiable Income
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = IncomeVerifiable), data = loan) +
+  geom_histogram(stat = "count") 
+```
+> While the majority of recipients have documentation to verify income there are a significant number who don't.  I wander what other criteria are accepted in these cases.
+
+### Total Prosper Loans
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = TotalProsperLoans), data = loan) +
+  geom_histogram(stat = "count")
+```
+> Most people have taken only one loan, with a tapering off for subsequent loans.
+
+### Investors
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = Investors), data = loan) +
+  geom_histogram()
+```
+> Most loans have fewr investors, with a diminishing number having increasing number of investors.  
+
+### Occupation
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = Occupation), data = loan) +
+  geom_histogram(stat = "count") +
+  theme(axis.text.x = element_text(size = 10, angle = 90))
+```
+> Most loan recipients describe their occupation as professional, but the largest portion do not have their occupation listed.  Teachers, engineers, accountants, and other professional occupations are common as well.  I wander of data for other loan sources would show similar distributions for occupation types.
+
+### Lower Credit Score Range
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeLower), data = loan) +
+  geom_histogram()
+```
+
+### Upper Credit Score Range
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeUpper), data = loan) +
+  geom_histogram()
+```
+
+> Both lower and upper credit score ranges follow a general normal distribution.  Both have dips in their peak regions though.  
+
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+> There are 84 variables and 113,937 observations in the Prosper Loan data set.  I created a new data frame called "loan" to only include 18 of those variables.  Each one is explored in a plot above.  
+
+### What is/are the main feature(s) of interest in your dataset?
+
+> The non-categorical variables appear follow normal or Poisson distributions.  Most findings seem resonable, such as most loans being current, more populous states having greater portion of loans, most recipients being employed, middle income ranges for most recipients, and credit scores that are fairly good around 700.  
+
+### What other features in the dataset do you think will help support your \
+
+> I think it would be interesting to further compare upper and lower credit scores.  Side by side box plots can make the comparison more visible, while comparing the standard deviations of the 2 can provide more quantifiable comparison. 
+
+### Did you create any new variables from existing variables in the dataset?
+
+> Listing category was originally had the awkward name "ProsperLoan$ListingCategory..numeric."  I reassigned that to the new variable ListingCategory.  The IncomeRange variable was also re-ordered.  
+
+### Of the features you investigated, were there any unusual distributions? \
+Did you perform any operations on the data to tidy, adjust, or change the form \
+of the data? If so, why did you do this?
+
+> The listing category variable had a numeric key, so I used the description in the Variable Definitions document to create a descriptive factor varaible for this array.  The x-axis variables did not appear in a very legible form, so for many plots I had to adjust the format using the ggplot theme layer.
+
+> By adjusting the binwidth the peaks observed in the credit score distributions become irrelevant.  However, there is still an increase in number of loans for lower credit scores that drops off before increasing again.  
+
+### Lower Credit Score Range (adjusted binwidth = 10)
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeLower), data = loan) +
+  geom_histogram(binwidth = 10)
+```
+
+### Upper Credit Score Range (adjusted binwidth = 10)
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeUpper), data = loan) +
+  geom_histogram(binwidth = 10)
+```
+
+
+# Bivariate Plots Section
+
+> Debt to Inome Ratio vs. Upper Credit Score Range
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeUpper, y = DebtToIncomeRatio), data = loan) +
+  geom_point()
+```
+
+> Debt to Inome Ratio vs. Lower Credit Score Range
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeLower, y = DebtToIncomeRatio), data = loan) +
+  geom_point()
+```
+
+> Debt to Inome Ratio vs. log of Lower Credit Score Range
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeLower, y = DebtToIncomeRatio), data = loan) +
+  geom_point() +
+  scale_y_log10()
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(loan$CreditScoreRangeLower, log(loan$DebtToIncomeRatio+1), method = 'pearson')
+```
+
+> With an r of -0.002 there is hardly a correlation.
+
+> Plotting mean of upper credit score range vs. DTI
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+loan.crsc_by_dti <- loan %>%
+  group_by(DebtToIncomeRatio) %>%
+  summarise(CreditScoreRangeUpper_mean = mean(CreditScoreRangeUpper),
+            n = n()) %>%
+  arrange(DebtToIncomeRatio)
+
+head(loan.crsc_by_dti)
+
+ggplot(aes(x = CreditScoreRangeUpper_mean, y = DebtToIncomeRatio), data = loan.crsc_by_dti) +
+  geom_point()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(log(loan.crsc_by_dti$CreditScoreRangeUpper_mean), loan.crsc_by_dti$DebtToIncomeRatio, method = 'pearson')
+```
+
+> Even when using the mean of the Upper Credit Score Ranges there still isn't much of a correlation with an r value of 0.08.
+
+> Plotting mean of upper credit score range vs. log of DTI 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeUpper_mean, y = DebtToIncomeRatio), data = loan.crsc_by_dti) +
+  geom_point() +
+  scale_y_log10()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(loan.crsc_by_dti$CreditScoreRangeUpper_mean, log(loan.crsc_by_dti$DebtToIncomeRatio+1), method = 'pearson')
+```
+
+> With an r value of 0.15 there still isn't a good correlation between the log of DTI and mean upper credit score.
+
+> I thought there might be a relationship between credit score and debt to income ratio, but there doesn't seem to be.  Plotting the log of DTI doesn't seem to change that much, although the correlation coefficient is higher but still not very good. Plotting the average upper credit score range vs. DTI did not lead to better results. The outlier in DTI is noticable, as are higher concentrations of lower DTIs.  
+
+> Dropping Not employed and not displayed categories from IncomeRange in order to plot only numeric ranges.
+
+```{r}
+loan$IncomeRangeNum <- ordered(loan$IncomeRange, levels = c('$0', '$1-24,999', '$25,000-49,999',                                                                      '$50,000-74,999', '$75,000-99,999',                                                                        '$100,000+'))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+loan %>%
+  filter(!is.na(IncomeRangeNum)) %>%
+     ggplot(aes(x = IncomeRangeNum, y = LoanOriginalAmount), fill = IncomeRangeNum) +
+       geom_point() +
+       theme(axis.text.x = element_text(size = 10, angle = 45)) 
+  
+```
+
+> Those who make 100k/yr or more take out a broader range of loan amounts, some higher than in other income ranges.  Those who make more money would probably qualify for higher loan amounts.  Those who are not employed tend to have lower loan amounts.  
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(aes(x = IncomeRange, y = BorrowerRate), data = loan) +
+  geom_point(alpha = 1/500) +
+    theme(axis.text.x = element_text(size = 10, angle = 45))
+```
+
+>  There doesn't appear to be much of a trend when comparing income range to borrower rate, even when plotting only 0.5% of the original data points. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = IncomeRange, y = CreditScoreRangeUpper), data = loan) +
+  geom_point(alpha = 1/500) +
+  theme(axis.text.x = element_text(size = 10, angle = 45))
+```
+
+> By limiting the concentration of points plotted there does seem to be a slight increase in credit score as income rises.  
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = ProsperScore, y = BorrowerRate), data = loan) +
+  geom_point() +
+    theme(axis.text.x = element_text(size = 10, angle = 45))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(loan$ProsperScore, loan$BorrowerRate, method = 'pearson')
+```
+>  There does seem to be a relationship between Prosper Score and borrower rate.  The lower the Prosper Score the higher the borrower rate is.  However there is only an r correlation coefficient of -0.65 which isn't very strong.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = CreditScoreRangeUpper, y = BorrowerRate), data = loan) +
+  geom_point() +
+    theme(axis.text.x = element_text(size = 10, angle = 45))
+```
+
+> There appears to be somewhat of a trend for lower borrower rates for higher credit scores.  I wander if those outliers with near 0 upper credit scores obtained thier rates using some other factor in the Prosper Score.  
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(aes(x = EmploymentStatusDuration, y = LoanOriginalAmount), data = loan) +
+  geom_point() +
+    theme(axis.text.x = element_text(size = 10, angle = 45))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(loan$EmploymentStatusDuration, loan$LoanOriginalAmount, method = 'pearson')
+```
+
+> It appears that those who have been employed longer are taking out lower amounts for loans in general.  Correlation is very weak though.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(aes(x = ListingCategory.f, y = LoanOriginalAmount), data = loan) +
+  geom_point() +
+  xlab('ListingCategory') +
+  theme(axis.text.x = element_text(size = 10, angle = 90)) 
+  
+```
+
+>  Debt consolidation loans occur more frequently in higher amounts than others, while those for cosmetic procedures occur in lower amounts than other types. 
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. How did the feature(s) of interest vary with other features in \
+the dataset?
+
+> I was expecting to see a relationship between income and credit score, and credit score and borrower interest rates.  I thought a relationship between credit score and DTI would stand out, but the results make sense in that regardless of how much debt one has some are better at making timely payments than others.  It also made sense that those with lower incomes tended to take smaller loan amounts.  I was expecting to see a noticable trend in income range vs. borrower rate, but people with lower incomes can still have good credit and vice versa so I shouldn't be surprised. 
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+
+> The outliers in the credit score vs borrower rate plot threw me off.  Some loan recipients have extremely low credit scores.  There must be some other criteria that would explain the wide range in borrower rates.  Perhaps the credit scores of co-signers are not included here, or maybe there are some other criteria in Prosper Score that determines these rates.  
+
+### What was the strongest relationship you found?
+
+> The strongest relationship is between Prosper Score and Borrower Rate, as the absolute value of r is the closest to 1.  It would've been nice if incomes were continuous, since it looks like there may be some correlation in those plots.
+
+# Multivariate Plots Section
+
+> Comparing box plot of lower and upper credit score ranges.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+p1 <- ggplot(aes(x = IncomeRange, y = CreditScoreRangeLower), data = loan) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(size = 10, angle = 45))
+
+p2 <- ggplot(aes(x = IncomeRange, y = CreditScoreRangeUpper), data = loan) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(size = 10, angle = 45))
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+
+
+> The IQR spread for lower and upper credit score ranges are very close to each other.  The median credit score generally rises with income, with the greatest IQR in the middle income range of $50,000-$70,000.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = IncomeRange,y = ProsperScore), data = loan) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(size = 10, angle = 45))
+```
+
+> The trend for Prosper Score rising with income is more noticable.  Perhaps Prosper weighs income more heavily in their score than in credit score.  The scale for Prosper Score is much narrower, so it's not wise to jump to this conclusion just yet. 
+
+> I want to see if there are any trends regarding loan status in relation to income range.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = LoanStatus), data = loan) +
+  geom_bar() +
+  facet_wrap(~IncomeRange) +
+  theme(axis.text.x = element_text(size = 7, angle = 45))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+by(loan$LoanStatus, loan$IncomeRange, summary)
+```
+
+> Past due loans are less frequent for higher income ranges.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = ProsperScore, y = BorrowerRate), data = loan) +
+  geom_point() +
+  facet_wrap(~IncomeRange) +
+  theme(axis.text.x = element_text(size = 7, angle = 45))
+```
+
+> Along income ranges the same trend of Borrower Rate generally decreasing with Prosper Score seems to hold.
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. Were there features that strengthened each other in terms of \
+looking at your feature(s) of interest?
+
+> Prosper Score generally increased with income range, while borrorer rate seemed to decrease as income range rose.  The IQR spreads of lower and upper credit scores were very similar.
+
+### Were there any interesting or surprising interactions between features?
+
+------
+
+# Final Plots and Summary
+
+> Of the variables examined so far, there seems to be a more prevalent relationship between Prosper Score and Borrower Rate.  These variables will be examined more closely.
+
+### Plot One: Histogram of Borrower Rates
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = BorrowerRate), data = loan) +
+  geom_histogram(binwidth = 0.01, color = 'black', fill = 'blue') +
+  xlab('Borrower Rate') +
+  ylab('Frequncy of Rate')
+```
+
+> Box plot of Borrower Rates
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(,y = BorrowerRate), data = loan) +
+  geom_boxplot() +
+  ylab('Borrower Rate')
+```
+
+
+```{r}
+summary(loan$BorrowerRate)
+```
+
+### Description One
+
+> Adjusting the binwidth on the histogram for Borrower Rate, we still see the increasing trend from 0.25 to 0.35.  This suggests a bi-modal distribution.  The range of rates is from 0 to 0.4975, with an IQR of 0.116.  There are some outliers above rates of 0.4.
+
+### Plot Two: Borrower Rate vs. Prosper Score
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = ProsperScore, y = BorrowerRate), data = loan) +
+  geom_point(aes(color = "orange")) +
+  geom_line(stat = 'summary', fun.y = mean, aes(color = "black")) +
+    geom_smooth(method = "lm", aes(color = "purple")) +
+  xlab('Prosper Score') +
+  ylab('Borrower Rate') +
+  theme(legend.position = "right") +
+  scale_color_identity(name = "Legend",
+                       breaks = c("orange", "black", "purple"),
+                       labels = c("Rates", "Mean Rate", "Trendline"),
+                       guide = "legend")
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(loan$ProsperScore, loan$BorrowerRate, method = 'pearson')
+```
+
+
+
+### Description Two
+
+>  Here we have Borrorwe Rate vs. Prosper Score, overlayed with mean Borrower Rate, and a trendline.  The absolute value of r is 0.65, which isn't very strong, but stronger than other correlations found in the Bivariate Plots section.  With the plots of mean Borrower Score and the trendline, it is easy to see the rates decreasing as Prosper Score increases.  This makes sense if higher Prosper Scores reflect loan takers general credit worthiness.
+
+
+### Plot Three: Borrower Rates vs. Prosper Score for each Income Range
+```{r}
+levels(loan$IncomeRange)
+loan$IncomeRangeMon <- ordered(loan$IncomeRange, levels = c('$0', '$1-24,999', '$25,000-49,999',                                                                      '$50,000-74,999', '$75,000-99,999',                                                                        '$100,000+'))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = ProsperScore, y = BorrowerRate), data = loan) +
+  geom_point(aes(color = "pink")) +
+  geom_line(stat = 'summary', fun.y = mean, aes(color = "black")) +
+    geom_smooth(method = "lm", aes(color = "purple")) +
+  xlab('Prosper Score') +
+  ylab('Mean Borrower Rate') +
+  theme(legend.position = "right") +
+  scale_color_identity(name = "Legend",
+                       breaks = c("pink", "black", "purple"),
+                       labels = c("Rates", "Mean Rate", "Trendline"),
+                       guide = "legend") +
+  facet_wrap(~IncomeRangeMon) 
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+with(subset(loan, IncomeRangeMon == '$1-24,999'), cor.test(BorrowerRate, ProsperScore))
+with(subset(loan, IncomeRangeMon == '$25,000-49,999'), cor.test(BorrowerRate, ProsperScore))
+with(subset(loan, IncomeRangeMon == '$50,000-74,999'), cor.test(BorrowerRate, ProsperScore))
+with(subset(loan, IncomeRangeMon == '$75,000-99,999'), cor.test(BorrowerRate, ProsperScore))
+with(subset(loan, IncomeRangeMon == '$100,000+'), cor.test(BorrowerRate, ProsperScore))
+```
+
+```{r}
+r <- c(-0.56, -0.56, -0.64, -0.67, -0.7)
+income <- c('$1-24,999', '$25,000-49,999', '$50,000-74,999', '$75,000-99,999', '$100,000+')
+corr.df <- data.frame('IncomeRange' = income, 'r' = r)
+
+corr.df
+```
+
+### Description Three
+
+>  Here I plotted Brorrower Rate vs. Prosper Score for each non-zero income range.  The patterns are similar in that the rate decreases as score increases.  Looking at Pearson's correlation coefficient for each, we see that the correlation becomes stronger as income range rises.   Finally in the $100,000+ range the correlation of -.7 is strong enough to say that there is a correlation.  It would seem that whichever other factors that go into determining the borrower rate don't play as much of a role for higher earning loan takers.
+
+------
+
+# Reflection
+
+> I ended up looking at this more from a consumer stand point, examining aspects such as credit score, income range, loan amount, employment status, and interest rates.  I was hoping to find a relationship between credit score and interest rate, but ended up finding better correlation using Prosper Score instead.  These correlations weren't very strong though.  
+
+>  Out of the 82 variables in this data set, I only looked at 18.  Perhaps other relationships exist among such variables as Estimated Return, LenderYield, IsBorrowerHomeowner, OpenCreditLines that weren't included in my subset.  Expanding on the analysis already performed I think that the IsBorrowerHomeowner variable would've been a good one to look at in terms of credit scores and interest rates.  
+
