@@ -67,4 +67,15 @@ Prosper Score generally increased with income range, while borrorer rate seemed 
 
 Of the variables examined so far, there seems to be a more prevalent relationship between Prosper Score and Borrower Rate.
 
+### Description One
+
 Adjusting the binwidth on the histogram for Borrower Rate, we still see the increasing trend from 0.25 to 0.35. This suggests a bi-modal distribution. The range of rates is from 0 to 0.4975, with an IQR of 0.116. There are some outliers above rates of 0.4.
+
+Pearson's Correlation Coefficient, r = -0.649
+
+
+### Description Two
+
+Here we have Borrorwe Rate vs. Prosper Score, overlayed with mean Borrower Rate, and a trendline. The absolute value of r is 0.65, which isn’t very strong, but stronger than other correlations found in the Bivariate Plots section. With the plots of mean Borrower Score and the trendline, it is easy to see the rates decreasing as Prosper Score increases. This makes sense if higher Prosper Scores reflect loan takers general credit worthiness.
+
+|
