@@ -37,7 +37,7 @@ A description of each variable is included in this link:
 https://docs.google.com/spreadsheets/d/1gDyi_L4UvIrLTEC6Wri5nbaMmkGmLQBk-Yx3z0XDEtI/edit#gid=0.
 
 ## Univariate Analysis
-  
+
 
 There are 84 variables and 113,937 observations in the Prosper Loan data set. I created a new data frame called “loan” to only include 18 of those variables. Each one is explored in a plot above.
 
@@ -69,13 +69,38 @@ Of the variables examined so far, there seems to be a more prevalent relationshi
 
 ### Description One
 
+![BorrowerRate_vs_FreqofRate](https://user-images.githubusercontent.com/56166497/80446607-e71f6b00-88dc-11ea-8801-f049223d9e2d.png)
+
+![BoxPlotBorrowerRate](https://user-images.githubusercontent.com/56166497/80446649-074f2a00-88dd-11ea-8c6a-b6d29dd2b7f1.png)
+
 Adjusting the binwidth on the histogram for Borrower Rate, we still see the increasing trend from 0.25 to 0.35. This suggests a bi-modal distribution. The range of rates is from 0 to 0.4975, with an IQR of 0.116. There are some outliers above rates of 0.4.
 
-Pearson's Correlation Coefficient, r = -0.649
+![ProsperScore_vs_BorrowerRate](https://user-images.githubusercontent.com/56166497/80446770-59904b00-88dd-11ea-9f52-7543e7489ab8.png)
+
+Pearson's Correlation Coefficient, r = -0.65
 
 
 ### Description Two
 
-Here we have Borrorwe Rate vs. Prosper Score, overlayed with mean Borrower Rate, and a trendline. The absolute value of r is 0.65, which isn’t very strong, but stronger than other correlations found in the Bivariate Plots section. With the plots of mean Borrower Score and the trendline, it is easy to see the rates decreasing as Prosper Score increases. This makes sense if higher Prosper Scores reflect loan takers general credit worthiness.
+Here we have Borrorer Rate vs. Prosper Score, overlayed with mean Borrower Rate, and a trendline. The absolute value of r is 0.65, which isn’t very strong, but stronger than other correlations found in the Bivariate Plots section. With the plots of mean Borrower Score and the trendline, it is easy to see the rates decreasing as Prosper Score increases. This makes sense if higher Prosper Scores reflect loan takers general credit worthiness.
 
-|
+| Income Range      | r     |
+|:-----------------:|:-----:|
+| $1 - $24,000      | -0.56 |
+| $25,000 - $49,999 | -0.56 |
+| $50,000 - $74,999 | -0.64 |
+| $75,000 - $99,999 | -0.67 |
+| $100,000+         | -0.70 |
+
+
+### Description Three
+
+![ProsperScore_vs_MeanBorrowerRate](https://user-images.githubusercontent.com/56166497/80446843-82b0db80-88dd-11ea-9781-b10d4332cfa2.png)
+
+Here I plotted Brorrower Rate vs. Prosper Score for each non-zero income range. The patterns are similar in that the rate decreases as score increases. Looking at Pearson’s correlation coefficient for each, we see that the correlation becomes stronger as income range rises. Finally in the $100,000+ range the correlation of -.7 is strong enough to say that there is a correlation. It would seem that whichever other factors that go into determining the borrower rate don’t play as much of a role for higher earning loan takers.
+
+
+# Reflection
+
+I ended up looking at this more from a consumer stand point, examining aspects such as credit score, income range, loan amount, employment status, and interest rates. I was hoping to find a relationship between credit score and interest rate, but ended up finding better correlation using Prosper Score instead. These correlations weren’t very strong though.
+Out of the 82 variables in this data set, I only looked at 18. Perhaps other relationships exist among such variables as Estimated Return, LenderYield, IsBorrowerHomeowner, OpenCreditLines that weren’t included in my subset. Expanding on the analysis already performed I think that the IsBorrowerHomeowner variable would’ve been a good one to look at in terms of credit scores and interest rates.
